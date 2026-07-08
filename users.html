@@ -1,0 +1,697 @@
+{% extends "base.html" %}
+{% block title %}Quản lý tài khoản người dùng{% endblock %}
+{% block page_title %}<b>Quản lý tài khoản người dùng</b>{% endblock %}
+{% block page_sub %}Danh sách và phân quyền tài khoản hệ thống{% endblock %}
+
+{% block topbar_actions %}
+<button class="btn-outline-custom" onclick="window.print()">
+  <i class="bi bi-download me-1"></i>Xuất dữ liệu
+</button>
+<button class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#addModal">
+  <i class="bi bi-plus-lg me-1"></i>Thêm tài khoản
+</button>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.kpi-trend {
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.kpi-trend.up {
+  color: #3B7D24;
+}
+
+.kpi-sub {
+  font-size: 12px;
+  color: #8899BB;
+}
+
+.toolbar-input {
+  padding-left: 36px;
+  width: 280px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 1px solid #E8EAF0;
+}
+
+.toolbar-select {
+  font-size: 13px;
+  border-radius:
+  6px; border:
+  1px solid #E8EAF0;
+  color: #5A6A88;
+}
+
+.btn-primary-custom {
+  background: #534AB7;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-weight: 600;
+  font-size: 13px;
+  transition: 0.2s;
+}
+
+.btn-primary-custom:hover {
+  background: #3C3489;
+  color: white;
+}
+
+.btn-outline-custom {
+  background: white;
+  color: #1E2A45;
+  border: 1px solid #E8EAF0;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-weight: 600;
+  font-size: 13px;
+  transition: 0.2s;
+}
+
+.btn-outline-custom:hover {
+  background: #F8F9FC;
+}
+
+.table > thead {
+  background: #F8F9FC;
+}
+
+.table > thead > tr > th {
+  font-weight: 600;
+  color: #5A6A88;
+  font-size: 13px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #E8EAF0;
+  white-space: nowrap;
+}
+
+.table > tbody > tr > td {
+  padding: 12px 16px;
+  font-size: 13px;
+  border-bottom: 1px solid #F0F2F8;
+  vertical-align: middle;
+}
+
+.table > tbody > tr.row-new {
+  animation: flashNew 1.6s ease;
+}
+@keyframes flashNew { 0% { background:#EEEDFE; } 100% { background: transparent; } }
+
+.avatar-circle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.role-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.role-admin {
+  background: #EEEDFE;
+  color: #534AB7;
+}
+
+.role-manager {
+  background: #E6F2FE;
+  color: #1E74D4;
+}
+
+.role-employee {
+  background: #F4F5F8;
+  color: #5A6A88;
+}
+
+.status-text {
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-active .status-dot {
+  background: #27AE60;
+}
+
+.status-active {
+  color: #1E2A45;
+}
+
+.status-inactive .status-dot {
+  background: #A0ABB8;
+}
+
+.status-inactive {
+  color: #5A6A88;
+}
+
+.status-locked .status-dot {
+  background: #E24B4A;
+}
+
+.status-locked {
+  color: #E24B4A;
+}
+
+.action-btn {
+  background: transparent;
+  border: none;
+  color: #8899BB;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: 0.2s;
+}
+
+.action-btn:hover {
+  background: #F0F2F8;
+  color: #1E2A45;
+}
+
+.pagination-text {
+  font-size: 13px;
+  color: #8899BB;
+}
+
+.page-btn {
+  background: white;
+  border: 1px solid #E8EAF0;
+  color: #1E2A45;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 4px;
+}
+
+.page-btn.active {
+  background: #534AB7;
+  color: white;
+  border-color: #534AB7;
+}
+
+.page-btn:disabled {
+  color: #A0ABB8;
+  background: #F8F9FC;
+  cursor: not-allowed;
+}
+
+.page-btn:not(:disabled):not(.active):hover {
+  background: #F8F9FC;
+}
+
+.page-size-select {
+  font-size: 13px;
+  border-radius: 6px;
+  order: 1px solid #E8EAF0;
+  color: #5A6A88;
+  width: auto;
+}
+.empty-state {
+  padding: 48px 16px;
+  text-align: center;
+  color: #8899BB;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="text-muted small mb-1"><b>Tổng tài khoản</b></div>
+        <div class="stat-val" id="totalUsersVal" style="color:#534AB7">0</div>
+        <div class="kpi-trend up mt-1"><i class="bi bi-arrow-up-right"></i> +12 trong tháng</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="text-muted small mb-1"><b>Đang hoạt động</b></div>
+        <div class="stat-val" id="activeVal" style="color:#1E2A45">0</div>
+        <div class="kpi-trend up mt-1" id="activePercent"><i class="bi bi-arrow-up-right"></i>0% thông số</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="text-muted small mb-1"><b>Không hoạt động</b></div>
+        <div class="stat-val" id="inactiveVal" style="color:#1E2A45">0</div>
+        <div class="kpi-sub mt-1">Chưa đăng nhập 30 ngày</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="text-muted small mb-1"><b>Bị khóa</b></div>
+        <div class="stat-val" id="lockedVal" style="color:#E24B4A">0</div>
+        <div class="kpi-trend up mt-1" style="color:#E24B4A"><i class="bi bi-arrow-up-right"></i>+3 tuần này</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+      <div class="position-relative">
+        <i class="bi bi-search position-absolute" style="top: 10px; left: 12px; color: #8899BB;"></i>
+        <input type="text" id="searchInput" class="form-control toolbar-input" placeholder="Tìm kiếm theo tên, email...">
+      </div>
+      <select id="roleFilter" class="form-select toolbar-select" style="width: 150px;">
+        <option value="">Tất cả vai trò</option>
+        <option value="admin">Admin</option>
+        <option value="manager">Quản lý</option>
+        <option value="employee">Nhân viên</option>
+      </select>
+      <select id="statusFilter" class="form-select toolbar-select" style="width: 160px;">
+        <option value="">Tất cả trạng thái</option>
+        <option value="active">Đang hoạt động</option>
+        <option value="inactive">Không hoạt động</option>
+        <option value="locked">Bị khóa</option>
+      </select>
+      <button class="btn btn-danger shadow-sm" id="bulkDeleteBtn" style="display: none; border-radius: 6px; font-size: 13px; font-weight: 600; padding: 6px 14px;" onclick="deleteSelected()">
+        <i class="bi bi-trash me-1"></i> Xóa đã chọn
+      </button>
+    </div>
+    <select id="pageSizeSelect" class="form-select page-size-select">
+      <option value="10">10 / trang</option>
+      <option value="20">20 / trang</option>
+      <option value="50">50 / trang</option>
+      <option value="100">100 / trang</option>
+    </select>
+  </div>
+
+  <div class="table-card">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0" id="usersTable">
+        <thead>
+          <tr>
+            <th style="width: 40px;"><input type="checkbox" class="form-check-input" id="chkAll"></th>
+            <th>Họ và tên</th>
+            <th>Email</th>
+            <th>Vai trò</th>
+            <th>Trạng thái</th>
+            <th>Ngày tạo</th>
+            <th>Đăng nhập cuối</th>
+            <th class="text-end">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="usersTbody"></tbody>
+      </table>
+    </div>
+    <div class="d-flex justify-content-between align-items-center p-3 border-top flex-wrap gap-2">
+      <div class="pagination-text" id="paginationInfo">Hiển thị 0 của 0 tài khoản</div>
+      <div class="d-flex gap-1 align-items-center flex-wrap" id="paginationControls"></div>
+    </div>
+  </div>
+
+<div class="modal fade" id="addModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title fw-bold">Thêm tài khoản mới</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="addUserForm">
+        <div class="modal-body pb-0">
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">Họ tên <span class="text-danger">*</span></label>
+            <input type="text" name="fullname" class="form-control form-control-sm" placeholder="Nguyễn Văn A" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">Email <span class="text-danger">*</span></label>
+            <input type="email" name="email" class="form-control form-control-sm" placeholder="email@company.vn" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">Vai trò</label>
+            <select name="role" class="form-select form-select-sm">
+              <option value="employee">Nhân viên</option>
+              <option value="manager">Quản lý</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="alert alert-info py-1 small mt-2">Mật khẩu mặc định: <strong>123456</strong></div>
+        </div>
+        <div class="modal-footer py-2">
+          <button type="submit" id="addUserSubmitBtn" class="btn btn-sm btn-primary">Tạo tài khoản</button>
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Hủy</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+
+/*KHO DỮ LIỆU (đóng vai trò "database" phía client)
+   Toàn bộ user được lưu trong localStorage nên xóa là vĩnh viễn,
+   thêm mới cũng được lưu lại kể cả sau khi tải lại trang. */
+
+const STORAGE_KEY = 'usersData_v3';
+const TOTAL_SEED = 1284; // tổng số tài khoản khởi tạo
+const ACTIVE_SEED = 1107, INACTIVE_SEED = 125, LOCKED_SEED = 52;
+
+const HO_LIST = ["Nguyễn","Trần","Lê","Phạm","Hoàng","Huỳnh","Phan","Vũ","Võ","Đặng","Bùi","Đỗ","Hồ","Ngô","Dương","Lý"];
+const DEM_LIST = ["Văn","Thị","Đức","Minh","Huỳnh","Ngọc","Thanh","Xuân","Anh","Hữu","Quang","Kim"];
+const TEN_LIST = ["An","Bình","Chi","Dũng","Duy","Giang","Hà","Hải","Hoa","Huy","Khang","Khánh","Lan","Linh","Long","Mai","Minh","Nam","Nga","Nhi","Phong","Phúc","Quân","Quốc","Sơn","Tài","Thảo","Thắng","Thu","Trang","Trung","Tuấn","Tú","Uyên","Việt","Vy","Yến"];
+const AVATAR_COLORS = ["#534AB7","#3B9B72","#D6469B","#F2994A","#2D9CDB","#EB5757","#219653","#9B51E0","#F2C94C","#56CCF2"];
+const DOMAINS = ["company.vn"];
+
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function randomDateStr(){
+  const day = 1 + Math.floor(Math.random()*28);
+  const month = 1 + Math.floor(Math.random()*6);
+  return `${String(day).padStart(2,'0')}/${String(month).padStart(2,'0')}/2026`;
+}
+
+function randomLastLogin(status){
+  if(status === 'locked') return pick(["1 tuần trước","2 tuần trước","3 tuần trước"]);
+  if(status === 'inactive') return pick(["30 ngày trước","45 ngày trước","2 tháng trước"]);
+  return pick(["Vừa xong","5 phút trước","1 giờ trước","Hôm qua","2 ngày trước"]);
+}
+
+function makeFullname(){
+  return `${pick(HO_LIST)} ${pick(DEM_LIST)} ${pick(TEN_LIST)}`;
+}
+
+function initialsOf(fullname){
+  const parts = fullname.trim().split(/\s+/);
+  return parts.slice(-2).map(w => w[0]).join('').toUpperCase();
+}
+
+function nextId(){
+  return (JSON.parse(localStorage.getItem(STORAGE_KEY+'_seq') || '0') || TOTAL_SEED) + 1;
+}
+
+function generateSeedUsers(){
+  // Tạo danh sách trạng thái đúng theo tỉ lệ 1107 active / 125 inactive / 52 locked = 1284
+  const statuses = [
+    ...Array(ACTIVE_SEED).fill('active'),
+    ...Array(INACTIVE_SEED).fill('inactive'),
+    ...Array(LOCKED_SEED).fill('locked')
+  ];
+  // Xáo trộn ngẫu nhiên
+  for(let i = statuses.length -1; i>0; i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [statuses[i], statuses[j]] = [statuses[j], statuses[i]];
+  }
+  // Vai trò: ~5% admin, ~15% quản lý, còn lại nhân viên
+  const users = [];
+  for(let i=0;i<TOTAL_SEED;i++){
+    const roleRoll = Math.random();
+    const role = roleRoll < 0.05 ? 'admin' : (roleRoll < 0.20 ? 'manager' : 'employee');
+    const fullname = makeFullname();
+    const tenRieng = fullname.trim().split(/\s+/).pop(); // lấy "tên" (từ cuối) trong họ tên
+    const emailName = tenRieng.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/đ/g,'d');
+    const status = statuses[i];
+    users.push({
+      id: i+1,
+      fullname,
+      email: `${emailName}@${pick(DOMAINS)}`,
+      role,
+      status,
+      created_at: randomDateStr(),
+      last_login: randomLastLogin(status),
+      color: pick(AVATAR_COLORS)
+    });
+  }
+  // Đảm bảo 3 dòng ví dụ đầu giống bản gốc để dễ đối chiếu
+  users[0] = { id:1, fullname:"Bùi Đức Tài", email:"tai@company.vn", role:"admin", status:"active", created_at:"12/03/2026", last_login:"Vừa xong", color:"#534AB7" };
+  users[1] = { id:2, fullname:"Lê Huỳnh Yến Nhi", email:"ynhi@company.vn", role:"manager", status:"active", created_at:"15/03/2026", last_login:"5 phút trước", color:"#3B9B72" };
+  return users;
+}
+
+let users = [];
+function loadUsers(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw){
+    try { users = JSON.parse(raw); return; } catch(e){ /* fallthrough tạo lại */ }
+  }
+  users = generateSeedUsers();
+  saveUsers();
+}
+function saveUsers(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+}
+
+/*TRẠNG THÁI GIAO DIỆN: lọc, tìm kiếm, phân trang */
+let currentPage = 1;
+let pageSize = 10;
+let lastNewId = null;
+
+const roleMap = {
+  admin: { label: 'Admin', cls: 'role-admin' },
+  manager: { label: 'Quản lý', cls: 'role-manager' },
+  employee: { label: 'Nhân viên', cls: 'role-employee' }
+};
+const statusMap = {
+  active: { label: 'Đang hoạt động', cls: 'status-active' },
+  inactive: { label: 'Không hoạt động', cls: 'status-inactive' },
+  locked: { label: 'Bị khóa', cls: 'status-locked' }
+};
+
+function getFiltered(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const role = document.getElementById('roleFilter').value;
+  const status = document.getElementById('statusFilter').value;
+  return users.filter(u => {
+    if(role && u.role !== role) return false;
+    if(status && u.status !== status) return false;
+    if(q && !(u.fullname.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))) return false;
+    return true;
+  });
+}
+
+function renderAll(){
+  recomputeStats();
+  const filtered = getFiltered();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  if(currentPage > totalPages) currentPage = totalPages;
+  if(currentPage < 1) currentPage = 1;
+
+  const start = (currentPage - 1) * pageSize;
+  const pageItems = filtered.slice(start, start + pageSize);
+  renderRows(pageItems);
+  renderPaginationInfo(filtered.length, start, pageItems.length);
+  renderPaginationControls(totalPages);
+  toggleBulkDeleteBtn();
+  document.getElementById('chkAll').checked = false;
+}
+
+function renderRows(items){
+  const tbody = document.getElementById('usersTbody');
+  if(items.length === 0){
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="bi bi-inboxes" style="font-size:28px;"></i><div class="mt-2">Không tìm thấy tài khoản phù hợp</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = items.map(u => {
+    const r = roleMap[u.role] || roleMap.employee;
+    const s = statusMap[u.status] || statusMap.active;
+    const isNew = u.id === lastNewId;
+    return `
+    <tr data-id="${u.id}" class="${isNew ? 'row-new' : ''}">
+      <td><input type="checkbox" class="form-check-input checkbox-input"></td>
+      <td>
+        <div class="d-flex align-items-center gap-2">
+          <div class="avatar-circle" style="background:${u.color}">${initialsOf(u.fullname)}</div>
+          <span class="fw-semibold" style="color:#1E2A45">${escapeHtml(u.fullname)}</span>
+        </div>
+      </td>
+      <td style="color:#5A6A88">${escapeHtml(u.email)}</td>
+      <td><span class="role-badge ${r.cls}">${r.label}</span></td>
+      <td><div class="status-text ${s.cls}"><span class="status-dot"></span>${s.label}</div></td>
+      <td style="color:#5A6A88">${u.created_at}</td>
+      <td style="color:#5A6A88">${u.last_login}</td>
+      <td class="text-end">
+
+        <button class="action-btn" title="Khóa/Mở khóa" onclick="toggleLock(${u.id})"><i class="bi ${u.status === 'locked' ? 'bi-unlock' : 'bi-lock'}"></i></button>
+      </td>
+    </tr>`;
+  }).join('');
+  lastNewId = null;
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function renderPaginationInfo(totalFiltered, start, countOnPage){
+  const el = document.getElementById('paginationInfo');
+  if(totalFiltered === 0){
+    el.textContent = `Hiển thị 0 của ${users.length.toLocaleString('vi-VN')} tài khoản`;
+    return;
+  }
+  const from = start + 1;
+  const to = start + countOnPage;
+  const suffix = totalFiltered === users.length ? '' : ` (lọc từ ${users.length.toLocaleString('vi-VN')})`;
+  el.textContent = `Hiển thị ${from}-${to} của ${totalFiltered.toLocaleString('vi-VN')} tài khoản${suffix}`;
+}
+
+function renderPaginationControls(totalPages){
+  const box = document.getElementById('paginationControls');
+  let html = '';
+  html += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage-1})">Trước</button>`;
+
+  const pages = pageWindow(currentPage, totalPages);
+  pages.forEach(p => {
+    if(p === '...'){
+      html += `<span class="mx-1 text-muted">...</span>`;
+    } else {
+      html += `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="goToPage(${p})">${p}</button>`;
+    }
+  });
+
+  html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage+1})">Sau</button>`;
+  box.innerHTML = html;
+}
+
+function pageWindow(current, total){
+  const delta = 1;
+  const range = [];
+  for(let i = Math.max(2, current - delta); i <= Math.min(total - 1, current + delta); i++){
+    range.push(i);
+  }
+  const result = [1];
+  if(range.length && range[0] > 2) result.push('...');
+  result.push(...range);
+  if(range.length && range[range.length-1] < total - 1) result.push('...');
+  if(total > 1) result.push(total);
+  return [...new Set(result)];
+}
+
+function goToPage(p){
+  currentPage = p;
+  renderAll();
+}
+
+function recomputeStats(){
+  const total = users.length;
+  const active = users.filter(u => u.status === 'active').length;
+  const inactive = users.filter(u => u.status === 'inactive').length;
+  const locked = users.filter(u => u.status === 'locked').length;
+  document.getElementById('totalUsersVal').textContent = total.toLocaleString('vi-VN');
+  document.getElementById('activeVal').textContent = active.toLocaleString('vi-VN');
+  document.getElementById('inactiveVal').textContent = inactive.toLocaleString('vi-VN');
+  document.getElementById('lockedVal').textContent = locked.toLocaleString('vi-VN');
+  const pct = total ? Math.round((active/total)*100) : 0;
+  document.getElementById('activePercent').innerHTML = `<i class="bi bi-arrow-up-right"></i>${pct}% thông số`;
+}
+
+/*HÀNH ĐỘNG: xóa vĩnh viễn, thêm mới, khóa/mở khóa */
+function toggleBulkDeleteBtn(){
+  const checkedCount = document.querySelectorAll('.checkbox-input:checked').length;
+  document.getElementById('bulkDeleteBtn').style.display = checkedCount > 0 ? 'inline-block' : 'none';
+}
+
+function deleteSelected(){
+  const checkboxes = document.querySelectorAll('.checkbox-input:checked');
+  if(checkboxes.length === 0) return;
+  if(!confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn ${checkboxes.length} tài khoản đã chọn? Hành động này không thể hoàn tác.`)) return;
+
+  const ids = Array.from(checkboxes).map(cb => Number(cb.closest('tr').dataset.id));
+  users = users.filter(u => !ids.includes(u.id));
+  saveUsers();
+  renderAll();
+}
+
+function toggleLock(id){
+  const u = users.find(u => u.id === id);
+  if(!u) return;
+  u.status = u.status === 'locked' ? 'active' : 'locked';
+  u.last_login = randomLastLogin(u.status);
+  saveUsers();
+  renderAll();
+}
+
+document.getElementById('addUserForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const form = e.target;
+  const submitBtn = document.getElementById('addUserSubmitBtn');
+  const fullname = form.fullname.value.trim();
+  const email = form.email.value.trim();
+  const role = form.role.value;
+  if(!fullname || !email) return;
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Đang tạo...';
+
+  const newId = users.length ? Math.max(...users.map(u => u.id)) + 1 : 1;
+  const newUser = {
+    id: newId,
+    fullname,
+    email,
+    role,
+    status: 'active',
+    created_at: new Date().toLocaleDateString('vi-VN'),
+    last_login: 'Vừa xong',
+    color: pick(AVATAR_COLORS)
+  };
+  users.unshift(newUser);
+  saveUsers();
+
+  // Reset bộ lọc để đảm bảo tài khoản mới hiển thị ngay trong bảng
+  document.getElementById('searchInput').value = '';
+  document.getElementById('roleFilter').value = '';
+  document.getElementById('statusFilter').value = '';
+  currentPage = 1;
+  lastNewId = newId;
+  renderAll();
+
+  form.reset();
+  bootstrap.Modal.getInstance(document.getElementById('addModal')).hide();
+  submitBtn.disabled = false;
+  submitBtn.textContent = 'Tạo tài khoản';
+});
+
+document.getElementById('searchInput').addEventListener('input', () => { currentPage = 1; renderAll(); });
+document.getElementById('roleFilter').addEventListener('change', () => { currentPage = 1; renderAll(); });
+document.getElementById('statusFilter').addEventListener('change', () => { currentPage = 1; renderAll(); });
+document.getElementById('pageSizeSelect').addEventListener('change', (e) => {
+  pageSize = Number(e.target.value);
+  currentPage = 1;
+  renderAll();
+});
+
+document.getElementById('chkAll').addEventListener('change', function(){
+  const isChecked = this.checked;
+  document.querySelectorAll('.checkbox-input').forEach(cb => cb.checked = isChecked);
+  toggleBulkDeleteBtn();
+});
+
+document.getElementById('usersTbody').addEventListener('change', function(e){
+  if(e.target.classList.contains('checkbox-input')){
+    toggleBulkDeleteBtn();
+    if(!e.target.checked) document.getElementById('chkAll').checked = false;
+  }
+});
+
+loadUsers();
+renderAll();
+</script>
+{% endblock %}

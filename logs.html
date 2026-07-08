@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Nhật ký{% endblock %}
+{% block page_title %}Nhật ký hoạt động{% endblock %}
+{% block page_sub %}Theo dõi toàn bộ thao tác trong hệ thống{% endblock %}
+{% block topbar_actions %}
+<button class="btn btn-sm btn-outline-secondary" onclick="window.print()">
+  <i class="bi bi-download me-1"></i>Xuất dữ liệu
+</button>
+{% endblock %}
+
+{% block content %}
+<!-- KPI -->
+<div class="row g-3 mb-4">
+  {% for label, val, color in [
+    ('Tổng hành động hôm nay', stats.total, '#534AB7'),
+    ('Đăng nhập thành công', stats.success, '#3B7D24'),
+    ('Đăng nhập thất bại', stats.failed, '#E24B4A'),
+    ('Thao tác quản trị', stats.admin, '#1E2A45')] %}
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="text-muted small mb-1">{{ label }}</div>
+      <div class="stat-val" style="color:{{ color }}">{{ val }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="table-card">
+  <div class="card-header">
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+      <!-- Quick filter tags -->
+      <div class="d-flex gap-1 flex-wrap me-2">
+        {% for t in types %}
+        <a href="{{ url_for('logs', type=t, search=search) }}"
+           class="badge text-decoration-none {% if filter_type==t or (not filter_type and t=='Tất cả') %}bg-primary{% else %}bg-light text-dark{% endif %}">
+          {{ t }}
+        </a>
+        {% endfor %}
+      </div>
+      <!-- Search -->
+      <form method="GET" class="d-flex gap-2 ms-auto">
+        <input type="hidden" name="type" value="{{ filter_type }}">
+        <input type="text" name="search" class="form-control form-control-sm" style="width:200px"
+               placeholder="🔍 Tìm user, hành động, IP..." value="{{ search }}">
+        <button class="btn btn-sm btn-outline-secondary">Tìm</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-sm table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Thời gian</th>
+          <th>Người dùng</th>
+          <th>Loại</th>
+          <th>Hành động</th>
+          <th>Địa chỉ IP</th>
+          <th>Kết quả</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td><small class="text-muted">{{ log.created_at[11:19] if log.created_at else '—' }}</small></td>
+          <td><span class="fw-semibold" style="font-size:13px">{{ log.user_name }}</span></td>
+          <td>
+            {% set tc = {'Quản trị':'#EEEDFE','Bảo mật':'#FCEBEB','Lịch họp':'#E1F5EE','Đăng nhập':'#E6F1FB','Lỗi':'#FCEBEB'} %}
+            {% set fc = {'Quản trị':'#3C3489','Bảo mật':'#791F1F','Lịch họp':'#085041','Đăng nhập':'#0C447C','Lỗi':'#791F1F'} %}
+            <span class="badge" style="background:{{ tc.get(log.action_type,'#F1EFE8') }};
+                                       color:{{ fc.get(log.action_type,'#444') }}">
+              {{ log.action_type }}
+            </span>
+          </td>
+          <td style="font-size:13px">{{ log.action }}</td>
+          <td><code style="font-size:11px">{{ log.ip }}</code></td>
+          <td>
+            {% if log.result=='success' %}
+              <span class="badge badge-active">Thành công</span>
+            {% elif log.result=='failed' %}
+              <span class="badge badge-banned">Thất bại</span>
+            {% elif log.result=='cancelled' %}
+              <span class="badge" style="background:#FAEEDA;color:#633806">Đã hủy</span>
+            {% else %}
+              <span class="badge badge-inactive">{{ log.result }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">Không có dữ liệu nhật ký.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="p-3 border-top">
+    <small class="text-muted">Hiển thị {{ logs|length }} bản ghi gần nhất</small>
+  </div>
+</div>
+{% endblock %}

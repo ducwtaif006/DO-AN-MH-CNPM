@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Thông báo{% endblock %}
+{% block page_title %}Thông báo hệ thống{% endblock %}
+{% block page_sub %}{{ unread_count }} thông báo chưa đọc{% endblock %}
+{% block topbar_actions %}
+{% if unread_count > 0 %}
+<a href="{{ url_for('mark_all_read') }}" class="btn btn-sm btn-outline-secondary">
+  <i class="bi bi-check2-all me-1"></i>Đánh dấu tất cả đã đọc
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <!-- Unread -->
+  <div class="col-md-6">
+    <div class="table-card">
+      <div class="card-header d-flex justify-content-between">
+        <span><i class="bi bi-bell-fill me-2 text-danger"></i>Chưa đọc</span>
+        <span class="badge bg-danger">{{ unread_count }}</span>
+      </div>
+      <div class="p-2">
+        {% for n in notif_unread %}
+        <div class="d-flex gap-2 p-2 mb-1 rounded" style="background:#FFF8F8;border:1px solid #FDDEDE">
+          <div style="width:34px;height:34px;border-radius:50%;flex-shrink:0;
+                      display:flex;align-items:center;justify-content:center;font-size:15px;
+                      background:{% if n.type=='danger' %}#FCEBEB{% elif n.type=='warning' %}#FAEEDA{% elif n.type=='success' %}#EAF3DE{% else %}#EEEDFE{% endif %}">
+            {% if n.type=='danger' %}🔒
+            {% elif n.type=='warning' %}⚠️
+            {% elif n.type=='success' %}✅
+            {% else %}ℹ️{% endif %}
+          </div>
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between">
+              <span class="fw-semibold" style="font-size:13px">{{ n.title }}</span>
+              <small class="text-muted">{{ n.created_at[11:16] if n.created_at else '' }}</small>
+            </div>
+            <div class="text-muted" style="font-size:12px">{{ n.body }}</div>
+          </div>
+          <a href="{{ url_for('mark_read', nid=n.id) }}" class="btn btn-sm btn-link p-0 ms-1" title="Đánh dấu đã đọc">
+            <i class="bi bi-check2" style="font-size:16px"></i>
+          </a>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-4">
+          <i class="bi bi-bell-slash" style="font-size:2rem"></i>
+          <div class="mt-2 small">Không có thông báo chưa đọc</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Read -->
+  <div class="col-md-6">
+    <div class="table-card">
+      <div class="card-header d-flex justify-content-between">
+        <span><i class="bi bi-bell me-2 text-muted"></i>Đã đọc</span>
+        <small class="text-muted">Gần đây</small>
+      </div>
+      <div class="p-2">
+        {% for n in notif_read %}
+        <div class="d-flex gap-2 p-2 mb-1 rounded border" style="opacity:.75">
+          <div style="width:34px;height:34px;border-radius:50%;flex-shrink:0;
+                      display:flex;align-items:center;justify-content:center;font-size:15px;
+                      background:#F5F6FA">
+            {% if n.type=='danger' %}🔒
+            {% elif n.type=='warning' %}⚠️
+            {% elif n.type=='success' %}✅
+            {% else %}ℹ️{% endif %}
+          </div>
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between">
+              <span class="fw-semibold" style="font-size:13px;color:#666">{{ n.title }}</span>
+              <small class="text-muted">{{ n.created_at[:10] if n.created_at else '' }}</small>
+            </div>
+            <div class="text-muted" style="font-size:12px">{{ n.body }}</div>
+          </div>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-4 small">Chưa có thông báo đã đọc.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

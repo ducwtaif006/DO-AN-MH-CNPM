@@ -1,0 +1,621 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}<b>Dashboard – Thống kê hệ thống</b>{% endblock %}
+{% block page_sub %}Cập nhật lúc vừa xong{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+.kpi-trend{
+  font-size:12px;
+  font-weight:600;
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+
+.kpi-trend.up{
+  color:#3B7D24;
+}
+
+.kpi-trend.down{
+  color:#E24B4A;
+}
+
+.kpi-sub{
+  font-size:12px;
+  color:#8899BB;
+}
+
+.month-filter-btn{
+  background:#fff;
+  border:1px solid #E8EAF0;
+  border-radius:20px;
+  padding:6px 14px;
+  font-size:13px;
+  font-weight:600;
+  color:#1E2A45;
+}
+
+.month-filter-btn:hover{
+  background:#F8F9FC;
+}
+
+.month-menu{
+  min-width:170px;
+  max-height:280px;
+  overflow-y:auto;
+  padding:6px;
+}
+
+.month-menu .dropdown-item{
+  font-size:13px;
+  border-radius:6px;
+  padding:6px 10px;
+}
+
+.month-menu .dropdown-item.active,
+.month-menu .dropdown-item:active{
+  background:#534AB7;
+  color:#fff;
+}
+
+.room-row{
+  margin-bottom:16px;
+}
+.room-row:last-child{
+  margin-bottom:0;
+}
+
+.room-track{
+  background:#F0F0FB;
+  border-radius:6px;
+  height:10px;overflow:
+  hidden;
+}
+
+.room-fill{
+  background:#534AB7;
+  border-radius:6px;
+  height:10px;
+}
+
+.org-avatar{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  font-weight:700;
+  color:#fff;
+  flex-shrink:0;
+}
+
+.org-rank{
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:11px;
+  font-weight:700;
+}
+
+.org-rank.top{
+  background:#534AB7;
+  color:#fff;
+}
+
+.org-rank.other{
+  background:#E8EAF0;
+  color:#5A6A88;
+}
+
+.org-count-pill{
+  background:#EEEDFE;
+  color:#3C3489;
+  font-weight:700;
+  font-size:12px;
+  padding:3px 10px;
+  border-radius:10px;
+}
+
+.meeting-item{
+  display:flex;gap:10px;
+  padding:10px 0;
+  border-bottom:1px solid #F0F2F8;
+}
+
+.meeting-item:last-child{
+  border-bottom:none;
+}
+
+.meeting-dot{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  margin-top:6px;
+  flex-shrink:0;
+}
+
+.meeting-title{
+  font-size:13px;
+  font-weight:600;
+  color:#1E2A45;
+}
+
+.meeting-sub{
+  font-size:12px;
+  color:#8899BB;
+}
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="text-muted small mb-1"><b>Tổng cuộc họp</div></b>
+      <div class="stat-val" id="kpiMeetings" style="color:#534AB7">248</div>
+      <div class="kpi-trend up mt-1" id="kpiTrendMeetings">
+        <i class="bi bi-arrow-up-right"></i>
+        +18% so với tháng trước
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="text-muted small mb-1"><b>Giờ sử dụng</div></b>
+      <div class="stat-val" id="kpiHours" style="color:#534AB7">486h</div>
+      <div class="kpi-trend up mt-1" id="kpiTrendHours">
+        <i class="bi bi-arrow-up-right"></i>
+        +12% so với tháng trước
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="text-muted small mb-1"><b>Phòng hoạt động</div></b>
+      <div class="stat-val" id="kpiRooms" style="color:#534AB7">8 / 10</div>
+      <div class="kpi-sub mt-1" id="kpiSubRooms">2 phòng đang bảo trì</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="text-muted small mb-1"><b>Tài khoản hoạt động</div></b>
+      <div class="stat-val" style="color:#1E2A45">1,107</div>
+      <div class="kpi-sub mt-1">/1,284 tổng tài khoản</div>
+    </div>
+  </div>
+</div>
+
+<div class="mb-3">
+  <div class="dropdown">
+    <button class="month-filter-btn dropdown-toggle" type="button" id="monthFilterBtn"
+            data-bs-toggle="dropdown" aria-expanded="false">
+      <i class="bi bi-calendar3 me-1"></i><span id="selectedMonthText">6/2026</span>
+    </button>
+    <ul class="dropdown-menu month-menu shadow-sm" aria-labelledby="monthFilterBtn">
+      <li><a class="dropdown-item active" href="javascript:void(0);" onclick="selectMonth('6/2026', this)">6/2026</a></li>
+      <li><a class="dropdown-item" href="javascript:void(0);" onclick="selectMonth('5/2026', this)">5/2026</a></li>
+      <li><a class="dropdown-item" href="javascript:void(0);" onclick="selectMonth('4/2026', this)">4/2026</a></li>
+      <li><a class="dropdown-item" href="javascript:void(0);" onclick="selectMonth('3/2026', this)">3/2026</a></li>
+      <li><a class="dropdown-item" href="javascript:void(0);" onclick="selectMonth('2/2026', this)">2/2026</a></li>
+      <li><a class="dropdown-item" href="javascript:void(0);" onclick="selectMonth('1/2026', this)">1/2026</a></li>
+      <li><a class="dropdown-item" href="javascript:void(0);" onclick="selectMonth('12/2025', this)">12/2025</a></li>
+      <li><a class="dropdown-item" href="javascript:void(0);" onclick="selectMonth('11/2025', this)">11/2025</a></li>
+      <li><a class="dropdown-item" href="javascript:void(0);" onclick="selectMonth('10/2025', this)">10/2025</a></li>
+      <li><a class="dropdown-item" href="javascript:void(0);" onclick="selectMonth('9/2025', this)">9/2025</a></li>
+      <li><a class="dropdown-item" href="javascript:void(0);" onclick="selectMonth('8/2025', this)">8/2025</a></li>
+      <li><a class="dropdown-item" href="javascript:void(0);" onclick="selectMonth('7/2025', this)">7/2025</a></li>
+    </ul>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-7">
+    <div class="table-card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-bar-chart me-2"></i><b>Số cuộc họp theo tháng</span></b>
+        <small class="text-muted">12 tháng gần nhất</small>
+      </div>
+      <div class="p-3" style="position:relative; height:320px;">
+        <canvas id="meetingChart"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-5">
+    <div class="table-card h-100">
+      <div class="card-header"><i class="bi bi-building me-2"></i><b>Hiệu suất sử dụng phòng</div></b>
+      <div class="p-3" id="roomStatsContainer">
+        <div class="text-muted mb-3" style="font-size:11px;margin-top:-6px">
+          Giờ sử dụng
+        </div>
+
+        <div class="room-row">
+          <div class="d-flex justify-content-between mb-1">
+            <span style="font-size:13px;font-weight:500;color:#1E2A45">Phòng A</span>
+            <span style="font-size:12px;color:#8899BB">120h</span>
+          </div>
+          <div class="room-track"><div class="room-fill" style="width:100%"></div></div>
+        </div>
+
+        <div class="room-row">
+          <div class="d-flex justify-content-between mb-1">
+            <span style="font-size:13px;font-weight:500;color:#1E2A45">Phòng B</span>
+            <span style="font-size:12px;color:#8899BB">80h</span>
+          </div>
+          <div class="room-track"><div class="room-fill" style="width:66%"></div></div>
+        </div>
+
+        <div class="room-row">
+          <div class="d-flex justify-content-between mb-1">
+            <span style="font-size:13px;font-weight:500;color:#1E2A45">Phòng C</span>
+            <span style="font-size:12px;color:#8899BB">95h</span>
+          </div>
+          <div class="room-track"><div class="room-fill" style="width:79%"></div></div>
+        </div>
+
+        <div class="room-row">
+          <div class="d-flex justify-content-between mb-1">
+            <span style="font-size:13px;font-weight:500;color:#1E2A45">Phòng D</span>
+            <span style="font-size:12px;color:#8899BB">65h</span>
+          </div>
+          <div class="room-track"><div class="room-fill" style="width:55%"></div></div>
+        </div>
+
+        <div class="room-row">
+          <div class="d-flex justify-content-between mb-1">
+            <span style="font-size:13px;font-weight:500;color:#1E2A45">Phòng E</span>
+            <span style="font-size:12px;color:#8899BB">50h</span>
+          </div>
+          <div class="room-track"><div class="room-fill" style="width:40%"></div></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-6">
+    <div class="table-card h-100">
+      <div class="card-header">
+        <div><i class="bi bi-trophy me-2"></i><b>Người tổ chức nhiều nhất</div></b>
+        <div class="text-muted" style="font-size:11px">Top 4 người tạo cuộc họp trong tháng</div>
+      </div>
+      <table class="table table-sm mb-0 align-middle">
+        <thead class="table-light">
+          <tr><th>#</th><th>Họ tên</th><th>Phòng ban</th><th class="text-end">Số cuộc họp</th></tr>
+        </thead>
+        <tbody id="topOrganizersContainer">
+          <tr>
+            <td><span class="org-rank top">1</span></td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="org-avatar" style="background:#534AB7">BT</div>
+                <span class="fw-semibold" style="font-size:13px;color:#1E2A45">Bùi Đức Tài</span>
+              </div>
+            </td>
+            <td class="text-muted" style="font-size:12px">Phòng Kỹ thuật</td>
+            <td class="text-end"><span class="org-count-pill">42 cuộc họp</span></td>
+          </tr>
+          <tr>
+            <td><span class="org-rank other">2</span></td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="org-avatar" style="background:#3B9B72">TH</div>
+                <span class="fw-semibold" style="font-size:13px;color:#1E2A45">Trần Hương</span>
+              </div>
+            </td>
+            <td class="text-muted" style="font-size:12px">Phòng Kinh doanh</td>
+            <td class="text-end"><span class="fw-semibold" style="font-size:13px;color:#1E2A45">35 cuộc họp</span></td>
+          </tr>
+          <tr>
+            <td><span class="org-rank other">3</span></td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="org-avatar" style="background:#D6469B">YN</div>
+                <span class="fw-semibold" style="font-size:13px;color:#1E2A45">Lê Huỳnh Yến Nhi</span>
+              </div>
+            </td>
+            <td class="text-muted" style="font-size:12px">Phòng Nhân sự</td>
+            <td class="text-end"><span class="fw-semibold" style="font-size:13px;color:#1E2A45">28 cuộc họp</span></td>
+          </tr>
+          <tr>
+            <td><span class="org-rank other">4</span></td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="org-avatar" style="background:#D6469B">LM</div>
+                <span class="fw-semibold" style="font-size:13px;color:#1E2A45">Lê Minh</span>
+              </div>
+            </td>
+            <td class="text-muted" style="font-size:12px">Phòng Marketing</td>
+            <td class="text-end"><span class="fw-semibold" style="font-size:13px;color:#1E2A45">21 cuộc họp</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<div class="col-md-6">
+  <div class="table-card h-100">
+    <div class="card-header">
+      <div><i class="bi bi-calendar-event me-2"></i><b>Cuộc họp trong tháng</b></div>
+      <div class="text-muted" style="font-size:11px">4 cuộc họp mới nhất</div>
+    </div>
+    <div class="p-3" id="recentMeetingsContainer">
+      <div class="meeting-item">
+        <div class="meeting-dot" style="background:#27AE60"></div>
+        <div class="flex-grow-1">
+          <div class="meeting-title">Sprint Planning Q3</div>
+          <div class="meeting-sub">09:00 - Phòng A - Bùi Đức Tài</div>
+        </div>
+      </div>
+      <div class="meeting-item">
+        <div class="meeting-dot" style="background:#27AE60"></div>
+        <div class="flex-grow-1">
+          <div class="meeting-title">Họp dự án Website</div>
+          <div class="meeting-sub">10:30 - Phòng B - Trần Hương</div>
+        </div>
+      </div>
+      <div class="meeting-item">
+        <div class="meeting-dot" style="background:#E24B4A"></div>
+        <div class="flex-grow-1">
+          <div class="meeting-title">Đánh giá nhân sự Q2</div>
+          <div class="meeting-sub">14:00 - Phòng C - Lê Huỳnh Yến Nhi</div>
+        </div>
+      </div>
+      <div class="meeting-item">
+        <div class="meeting-dot" style="background:#e27a4a"></div>
+        <div class="flex-grow-1">
+          <div class="meeting-title">Review sản phẩm 2.0</div>
+          <div class="meeting-sub">16:30 - Phòng D - Lê Minh</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 1. Kho dữ liệu tĩnh cho Frontend
+const dashboardData = {
+  '6/2026': {
+    meetings: 248,
+    hours: 486,
+    rooms: "8 / 12",
+    chartLabels: ['T7', 'T8', 'T9', 'T10', 'T11', 'T12', 'T1', 'T2', 'T3', 'T4', 'T5', 'T6'],
+    chartCounts: [180, 210, 195, 215, 230, 260, 205, 185, 220, 235, 230, 248]
+  },
+  '5/2026': {
+    meetings: 215,
+    hours: 410,
+    rooms: "9 / 12",
+    chartLabels: ['T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12', 'T1', 'T2', 'T3', 'T4', 'T5'],
+    chartCounts: [160, 180, 210, 195, 215, 230, 260, 205, 185, 220, 235, 215]
+  },
+  '4/2026': {
+    meetings: 235,
+    hours: 450,
+    rooms: "7 / 12",
+    chartLabels: ['T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12', 'T1', 'T2', 'T3', 'T4'],
+    chartCounts: [190, 160, 180, 210, 195, 215, 230, 260, 205, 185, 220, 235]
+  },
+  '3/2026': {
+    meetings: 220, hours: 430, rooms: "8 / 12",
+    chartLabels: ['T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12', 'T1', 'T2', 'T3'],
+    chartCounts: [175, 190, 160, 180, 210, 195, 215, 230, 260, 205, 185, 220]
+  },
+  '2/2026': {
+    meetings: 185, hours: 350, rooms: "6 / 12",
+    chartLabels: ['T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12', 'T1', 'T2'],
+    chartCounts: [180, 175, 190, 160, 180, 210, 195, 215, 230, 260, 205, 185]
+  },
+  '1/2026': {
+    meetings: 205, hours: 390, rooms: "10 / 12",
+    chartLabels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12', 'T1'],
+    chartCounts: [200, 180, 175, 190, 160, 180, 210, 195, 215, 230, 260, 205]
+  },
+  '12/2025': {
+    meetings: 260, hours: 510, rooms: "11 / 12",
+    chartLabels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
+    chartCounts: [170, 200, 180, 175, 190, 160, 180, 210, 195, 215, 230, 260]
+  },
+  '11/2025': {
+    meetings: 230, hours: 440, rooms: "9 / 12",
+    chartLabels: ['T12', 'T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11'],
+    chartCounts: [240, 170, 200, 180, 175, 190, 160, 180, 210, 195, 215, 230]
+  },
+  '10/2025': {
+    meetings: 215, hours: 415, rooms: "8 / 12",
+    chartLabels: ['T11', 'T12', 'T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10'],
+    chartCounts: [225, 240, 170, 200, 180, 175, 190, 160, 180, 210, 195, 215]
+  },
+  '9/2025': {
+    meetings: 195, hours: 380, rooms: "7 / 12",
+    chartLabels: ['T10', 'T11', 'T12', 'T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9'],
+    chartCounts: [210, 225, 240, 170, 200, 180, 175, 190, 160, 180, 210, 195]
+  },
+  '8/2025': {
+    meetings: 210, hours: 405, rooms: "8 / 12",
+    chartLabels: ['T9', 'T10', 'T11', 'T12', 'T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8'],
+    chartCounts: [190, 210, 225, 240, 170, 200, 180, 175, 190, 160, 180, 210]
+  },
+  '7/2025': {
+    meetings: 180, hours: 340, rooms: "6 / 12",
+    chartLabels: ['T8', 'T9', 'T10', 'T11', 'T12', 'T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'],
+    chartCounts: [205, 190, 210, 225, 240, 170, 200, 180, 175, 190, 160, 180]
+  }
+};
+
+let myChart;
+const ctx = document.getElementById('meetingChart').getContext('2d');
+
+// 2. Hàm vẽ/vẽ lại biểu đồ Chart.js
+function renderChart(labels, counts) {
+  const colors = counts.map((_, i) => i === counts.length - 1 ? '#534AB7' : '#B5D4F4');
+
+  if (myChart) {
+    myChart.destroy();
+  }
+
+  const lastValuePlugin = {
+    id: 'lastValueLabel',
+    afterDatasetsDraw(chart) {
+      const {ctx} = chart;
+      const meta = chart.getDatasetMeta(0);
+      const lastIndex = counts.length - 1;
+      const bar = meta.data[lastIndex];
+      if (!bar) return;
+      ctx.save();
+      ctx.fillStyle = '#534AB7';
+      ctx.font = '700 13px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(counts[lastIndex], bar.x, bar.y - 8);
+      ctx.restore();
+    }
+  };
+
+  myChart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ data: counts, backgroundColor: colors, borderRadius: 4, maxBarThickness: 34 }] },
+    options: {
+      animation: false,
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: '#F0F2F8' } },
+        x: { grid: { display: false } }
+      }
+    },
+    plugins: [lastValuePlugin]
+  });
+}
+
+// Khởi chạy biểu đồ mặc định ban đầu với tháng 6/2026
+renderChart(dashboardData['6/2026'].chartLabels, dashboardData['6/2026'].chartCounts);
+
+// 3. Hàm xử lý bắt sự kiện click
+function selectMonth(monthKey, element) {
+  document.getElementById('selectedMonthText').innerText = monthKey;
+
+  document.querySelectorAll('.month-menu .dropdown-item').forEach(item => item.classList.remove('active'));
+  element.classList.add('active');
+
+  const data = dashboardData[monthKey];
+  if (!data) return;
+
+  renderDynamicWidgets(monthKey);
+  renderChart(data.chartLabels, data.chartCounts);
+}
+
+const defaultRoomHTML = document.getElementById('roomStatsContainer').innerHTML;
+const defaultOrgHTML = document.getElementById('topOrganizersContainer').innerHTML;
+const defaultMeetingHTML = document.getElementById('recentMeetingsContainer').innerHTML;
+
+function renderDynamicWidgets(monthKey) {
+  if (monthKey === '6/2026') {
+    document.getElementById('roomStatsContainer').innerHTML = defaultRoomHTML;
+    document.getElementById('topOrganizersContainer').innerHTML = defaultOrgHTML;
+    document.getElementById('recentMeetingsContainer').innerHTML = defaultMeetingHTML;
+    return;
+  }
+
+  let parts = monthKey.split('/');
+  let seed = parseInt(parts[0]) + parseInt(parts[1]);
+  function rand(min, max) {
+    let x = Math.sin(seed++) * 10000;
+    return Math.floor((x - Math.floor(x)) * (max - min + 1)) + min;
+  }
+
+  // 1. Đổi Hiệu suất phòng (đủ 5 phòng, không trùng tên, sắp xếp giảm dần theo giờ)
+  const roomNames = ['Phòng A', 'Phòng B', 'Phòng C', 'Phòng D', 'Phòng E'];
+  let roomsData = roomNames.map(name => ({ name, hrs: rand(30, 130) }));
+  roomsData.sort((a, b) => b.hrs - a.hrs);
+  const maxHrs = roomsData[0].hrs;
+  let roomsHTML = `<div class="text-muted mb-3" style="font-size:11px;margin-top:-6px">Tháng ${monthKey} (giờ sử dụng)</div>`;
+  roomsData.forEach(r => {
+    let pct = Math.min(100, Math.round((r.hrs / maxHrs) * 100));
+    roomsHTML += `
+    <div class="room-row">
+      <div class="d-flex justify-content-between mb-1">
+        <span style="font-size:13px;font-weight:500;color:#1E2A45">${r.name}</span>
+        <span style="font-size:12px;color:#8899BB">${r.hrs}h</span>
+      </div>
+      <div class="room-track"><div class="room-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  });
+  document.getElementById('roomStatsContainer').innerHTML = roomsHTML;
+
+  // 2. Đổi Người tổ chức nhiều nhất - chọn ngẫu nhiên 4 người từ 1 pool nhiều tên khác nhau
+  const orgPool = [
+    {n: 'Bùi Đức Tài',        d: 'Phòng Kỹ thuật',   a: 'BĐ', c: '#534AB7'},
+    {n: 'Trần Hương',         d: 'Phòng Kinh doanh', a: 'TH', c: '#3B9B72'},
+    {n: 'Lê Huỳnh Yến Nhi',   d: 'Phòng Nhân sự',    a: 'LY', c: '#D6469B'},
+    {n: 'Lê Minh',            d: 'Phòng Marketing',  a: 'LM', c: '#F2994A'},
+    {n: 'Nguyễn Văn An',      d: 'Phòng Kỹ thuật',   a: 'NA', c: '#3D8BD9'},
+    {n: 'Phạm Thị Ngọc Mai',  d: 'Phòng Kế toán',    a: 'PM', c: '#9B59B6'},
+    {n: 'Đặng Quốc Huy',      d: 'Phòng IT',         a: 'ĐH', c: '#16A085'},
+    {n: 'Vũ Thị Thanh Thảo',  d: 'Phòng Nhân sự',    a: 'VT', c: '#E67E22'},
+    {n: 'Hoàng Minh Đức',     d: 'Phòng Kinh doanh', a: 'HĐ', c: '#2980B9'},
+    {n: 'Ngô Thị Bích Ngọc',  d: 'Phòng Marketing',  a: 'NN', c: '#C0392B'},
+    {n: 'Trịnh Gia Bảo',      d: 'Phòng Kỹ thuật',   a: 'TB', c: '#8E44AD'},
+    {n: 'Đỗ Thị Kim Anh',     d: 'Phòng Kế toán',    a: 'ĐA', c: '#27AE60'},
+  ];
+
+  // Chọn ngẫu nhiên (nhưng cố định theo tháng nhờ seed) 4 người không trùng nhau
+  let pool = [...orgPool];
+  let orgs = [];
+  for (let i = 0; i < 4 && pool.length > 0; i++) {
+    let idx = rand(0, pool.length - 1);
+    orgs.push(pool[idx]);
+    pool.splice(idx, 1);
+  }
+
+  let orgsHTML = '';
+  let orgCount = rand(30, 45);
+  orgs.forEach((o, i) => {
+    let rankClass = i === 0 ? 'top' : 'other';
+    let countBadge = i === 0
+      ? `<span class="org-count-pill">${orgCount} họp</span>`
+      : `<span class="fw-semibold" style="font-size:13px;color:#1E2A45">${orgCount} họp</span>`;
+    orgsHTML += `
+    <tr>
+      <td><span class="org-rank ${rankClass}">${i+1}</span></td>
+      <td>
+        <div class="d-flex align-items-center gap-2">
+          <div class="org-avatar" style="background:${o.c}">${o.a}</div>
+          <span class="fw-semibold" style="font-size:13px;color:#1E2A45">${o.n}</span>
+        </div>
+      </td>
+      <td class="text-muted" style="font-size:12px">${o.d}</td>
+      <td class="text-end">${countBadge}</td>
+    </tr>`;
+    orgCount -= rand(4, 8);
+  });
+  document.getElementById('topOrganizersContainer').innerHTML = orgsHTML;
+
+  // 3. Đổi Cuộc họp trong tháng
+  let meetsHTML = '';
+  const titles = ['Sprint Planning', 'Họp dự án', 'Đánh giá nhân sự', 'Review sản phẩm', 'Gặp khách hàng', 'Đào tạo nội bộ'];
+  const colors = ['#27AE60', '#E24B4A', '#F2994A', '#534AB7'];
+  for(let i=0; i<4; i++) {
+    meetsHTML += `
+    <div class="meeting-item">
+      <div class="meeting-dot" style="background:${colors[rand(0,3)]}"></div>
+      <div class="flex-grow-1">
+        <div class="meeting-title">${titles[rand(0,5)]}</div>
+        <div class="meeting-sub">1${rand(0,9)}:00 - ${roomNames[rand(0,4)]} - ${orgs[rand(0,3)].n}</div>
+      </div>
+    </div>`;
+  }
+  document.getElementById('recentMeetingsContainer').innerHTML = meetsHTML;
+}
+</script>
+{% endblock %}

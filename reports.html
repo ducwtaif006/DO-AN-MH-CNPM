@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% block title %}Báo cáo{% endblock %}
+{% block page_title %}<b>Báo cáo thống kê</b>{% endblock %}
+{% block page_sub %}Xuất & phân tích dữ liệu hoạt động hệ thống{% endblock %}
+
+{% block extra_head %}
+
+<style>
+.kpi-trend{
+  font-size:12px;
+  font-weight:600;
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+
+.kpi-trend.up{
+  color:#3B7D24;
+}
+
+.kpi-trend.down{
+  color:#E24B4A;
+}
+
+.kpi-sub{
+  font-size:12px;
+  color:#8899BB;
+}
+
+.room-row{
+  margin-bottom:16px;
+}
+.room-row:last-child{
+  margin-bottom:0;
+}
+
+.room-track{
+  background:#F0F0FB;
+  border-radius:6px;
+  height:10px;
+  overflow:hidden;
+}
+
+.room-fill{
+  background:#534AB7;
+  border-radius:6px;
+  height:10px;
+}
+
+.card-header-icon{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.icon-box{
+  width:34px;
+  height:34px;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:15px;
+  flex-shrink:0;
+}
+
+.icon-box.purple{
+  background:#EEEDFE;
+  color:#534AB7;
+}
+
+.icon-box.blue{
+  background:#E6F1FB;
+  color:#0C447C;
+}
+
+.card-header-title{
+  font-size:14px;
+  font-weight:700;
+  color:#1E2A45;
+}
+
+.card-header-sub{
+  font-size:11px;
+  color:#8899BB;
+  margin-top:1px;
+}
+
+#deptStatsContainer th,
+#deptStatsContainer td{
+  padding:14px 16px;
+  font-size:14px;
+}
+
+#deptStatsContainer th{
+  font-size:13px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- KPI -->
+<div class="row g-3 mb-3">
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="text-muted small mb-1"><b>Tổng cuộc họp (tháng)</b></div>
+      <div class="stat-val" id="kpiMeetings" style="color:#534AB7">248</div>
+      <div class="kpi-trend up mt-1" id="kpiTrendMeetings">
+        <i class="bi bi-arrow-up-right"></i>
+        +18% so với tháng trước
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="text-muted small mb-1"><b>Giờ sử dụng</b></div>
+      <div class="stat-val" id="kpiHours" style="color:#534AB7">486h</div>
+      <div class="kpi-trend up mt-1" id="kpiTrendHours">
+        <i class="bi bi-arrow-up-right"></i>
+        +12% so với tháng trước
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="text-muted small mb-1"><b>Tỷ lệ hủy cuộc họp</b></div>
+      <div class="stat-val" id="kpiCancelRate" style="color:#1E2A45">8.2 %</div>
+      <div class="kpi-trend up mt-1" id="kpiTrendCancel">
+        <i class="bi bi-arrow-up-right"></i>
+        + 2.1% so với tháng trước
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="text-muted small mb-1"><b>Trung bình người/họp</b></div>
+      <div class="stat-val" style="color:#1E2A45">6.4</div>
+      <div class="kpi-trend up mt-1" id="kpiTrendCancel">
+        • ổn định</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Room usage -->
+  <div class="col-md-6">
+    <div class="table-card">
+      <div class="card-header">
+        <div class="card-header-icon">
+          <div class="icon-box purple"><i class="bi bi-building"></i></div>
+          <div>
+            <div class="card-header-title">Hiệu suất phòng họp</div>
+            <div class="card-header-sub">Tháng 6/2026</div>
+          </div>
+        </div>
+      </div>
+      <div class="p-3" id="roomStatsContainer">
+        <div class="room-row">
+          <div class="d-flex justify-content-between mb-1">
+            <span style="font-size:13px;font-weight:500;color:#1E2A45">Phòng A</span>
+            <span style="font-size:12px;color:#8899BB">120h</span>
+          </div>
+          <div class="room-track"><div class="room-fill" style="width:100%"></div></div>
+        </div>
+        <div class="room-row">
+          <div class="d-flex justify-content-between mb-1">
+            <span style="font-size:13px;font-weight:500;color:#1E2A45">Phòng B</span>
+            <span style="font-size:12px;color:#8899BB">80h</span>
+          </div>
+          <div class="room-track"><div class="room-fill" style="width:67%"></div></div>
+        </div>
+        <div class="room-row">
+          <div class="d-flex justify-content-between mb-1">
+            <span style="font-size:13px;font-weight:500;color:#1E2A45">Phòng C</span>
+            <span style="font-size:12px;color:#8899BB">95h</span>
+          </div>
+          <div class="room-track"><div class="room-fill" style="width:79%"></div></div>
+        </div>
+        <div class="room-row">
+          <div class="d-flex justify-content-between mb-1">
+            <span style="font-size:13px;font-weight:500;color:#1E2A45">Phòng D</span>
+            <span style="font-size:12px;color:#8899BB">65h</span>
+          </div>
+          <div class="room-track"><div class="room-fill" style="width:54%"></div></div>
+        </div>
+        <div class="room-row">
+          <div class="d-flex justify-content-between mb-1">
+            <span style="font-size:13px;font-weight:500;color:#1E2A45">Phòng E</span>
+            <span style="font-size:12px;color:#8899BB">50h</span>
+          </div>
+          <div class="room-track"><div class="room-fill" style="width:42%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dept stats -->
+  <div class="col-md-6">
+    <div class="table-card">
+      <div class="card-header">
+        <div class="card-header-icon">
+          <div class="icon-box blue"><i class="bi bi-calendar-event"></i></div>
+          <div>
+            <div class="card-header-title">Cuộc họp theo phòng ban</div>
+            <div class="card-header-sub">Top 4 phòng ban sử dụng nhiều nhất</div>
+          </div>
+        </div>
+      </div>
+      <table class="table mb-0" id="deptStatsContainer">
+        <thead class="table-light">
+          <tr><th>Phòng ban</th><th class="text-center">Số lần họp</th><th class="text-center">Giờ</th><th>Trạng thái</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="fw-semibold" style="font-size:13px">Phòng Kỹ thuật</td>
+            <td class="text-center" style="color:#534AB7;font-weight:600">68</td>
+            <td class="text-center text-muted">142h</td>
+            <td><span class="badge" style="background:#EAF3DE;color:#27500A">Cao nhất</span></td>
+          </tr>
+          <tr>
+            <td class="fw-semibold" style="font-size:13px">Phòng Kinh doanh</td>
+            <td class="text-center" style="color:#534AB7;font-weight:600">54</td>
+            <td class="text-center text-muted">108h</td>
+            <td><span class="badge badge-admin">Cao</span></td>
+          </tr>
+          <tr>
+            <td class="fw-semibold" style="font-size:13px">Phòng Nhân sự</td>
+            <td class="text-center" style="color:#534AB7;font-weight:600">41</td>
+            <td class="text-center text-muted">82h</td>
+            <td><span class="badge badge-employee">Trung bình</span></td>
+          </tr>
+          <tr>
+            <td class="fw-semibold" style="font-size:13px">Phòng Tài chính</td>
+            <td class="text-center" style="color:#534AB7;font-weight:600">28</td>
+            <td class="text-center text-muted">55h</td>
+            <td><span class="badge badge-employee">Trung bình</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

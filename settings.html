@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+{% block title %}Cài đặt{% endblock %}
+{% block page_title %}Cài đặt hệ thống{% endblock %}
+{% block page_sub %}Cấu hình chung cho toàn bộ ứng dụng{% endblock %}
+{% block topbar_actions %}
+<a href="{{ url_for('reset_settings') }}" class="btn btn-sm btn-outline-danger"
+   onclick="return confirm('Khôi phục về mặc định? Các thay đổi sẽ bị xoá.')">
+  <i class="bi bi-arrow-counterclockwise me-1"></i>Khôi phục mặc định
+</a>
+<button type="submit" form="settingsForm" class="btn btn-sm btn-primary">
+  <i class="bi bi-floppy me-1"></i>Lưu cài đặt
+</button>
+{% endblock %}
+
+{% block content %}
+<form method="POST" id="settingsForm">
+<div class="row g-3">
+
+<!-- Thông tin tổ chức -->
+<div class="col-md-6">
+  <div class="table-card">
+    <div class="card-header"><i class="bi bi-building-community me-2"></i>Thông tin tổ chức</div>
+    <div class="p-3">
+
+      <!-- Tên công ty -->
+      <div class="row align-items-center mb-2">
+        <label class="col-5 small text-muted">Tên công ty</label>
+        <div class="col-7">
+          <input type="text" name="company_name" class="form-control form-control-sm"
+                 value="{{ cfg.get('company_name', 'Công ty XYZ') }}" placeholder="Công ty XYZ">
+        </div>
+      </div>
+
+      <!-- Múi giờ — mặc định GMT+7, chỉ đọc -->
+      <div class="row align-items-center mb-2">
+        <label class="col-5 small text-muted">Múi giờ</label>
+        <div class="col-7">
+          <input type="text" name="timezone" class="form-control form-control-sm"
+                 value="GMT+7" readonly
+                 style="background:var(--bs-secondary-bg);cursor:not-allowed">
+        </div>
+      </div>
+
+      <!-- Ngôn ngữ — dropdown Tiếng Việt / Tiếng Anh -->
+ <div class="row align-items-center mb-2">
+  <label class="col-5 small text-muted">Ngôn ngữ</label>
+  <div class="col-7">
+    <input type="text" name="language" class="form-control form-control-sm"
+           value="Tiếng Việt" readonly
+           style="background:var(--bs-secondary-bg);cursor:not-allowed">
+  </div>
+</div>
+
+      <!-- Định dạng ngày — date picker -->
+      <div class="row align-items-center mb-2">
+        <label class="col-5 small text-muted">Ngày hiệu lực</label>
+        <div class="col-7">
+          <input type="date" name="date_format" class="form-control form-control-sm"
+                 value="{{ cfg.get('date_format', '') }}">
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+  <!-- Cài đặt lịch họp -->
+<div class="col-md-6">
+  <div class="table-card">
+    <div class="card-header"><i class="bi bi-calendar-check me-2"></i>Cài đặt lịch họp</div>
+    <div class="p-3">
+
+      <!-- Giờ bắt đầu -->
+      <div class="row align-items-center mb-2">
+        <label class="col-6 small text-muted">Giờ bắt đầu làm việc</label>
+        <div class="col-6">
+          <input type="time" name="work_start" class="form-control form-control-sm"
+                 value="{{ cfg.get('work_start', '08:00') }}">
+        </div>
+      </div>
+
+      <!-- Giờ kết thúc -->
+      <div class="row align-items-center mb-2">
+        <label class="col-6 small text-muted">Giờ kết thúc làm việc</label>
+        <div class="col-6">
+          <input type="time" name="work_end" class="form-control form-control-sm"
+                 value="{{ cfg.get('work_end', '18:00') }}">
+        </div>
+      </div>
+
+      <!-- Thời lượng mặc định -->
+      <div class="row align-items-center mb-2">
+        <label class="col-6 small text-muted">Thời lượng mặc định (phút)</label>
+        <div class="col-6">
+          <input type="number" name="meeting_duration" class="form-control form-control-sm"
+                 value="{{ cfg.get('meeting_duration', '60') }}"
+                 min="15" max="480" step="15" placeholder="60">
+        </div>
+      </div>
+
+      <!-- Đặt phòng trước tối đa -->
+      <div class="row align-items-center mb-2">
+        <label class="col-6 small text-muted">Đặt phòng trước tối đa (ngày)</label>
+        <div class="col-6">
+          <input type="number" name="max_book_days" class="form-control form-control-sm"
+                 value="{{ cfg.get('max_book_days', '30') }}"
+                 min="1" max="365" step="1" placeholder="30">
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+  <!-- Thông báo -->
+  <div class="col-md-6">
+    <div class="table-card">
+      <div class="card-header"><i class="bi bi-bell me-2"></i>Cài đặt thông báo</div>
+      <div class="p-3">
+        <div class="row align-items-center mb-2">
+          <label class="col-7 small text-muted">Nhắc nhở trước họp</label>
+          <div class="col-5 text-end">
+            <div class="form-check form-switch d-inline-block">
+              <input class="form-check-input" type="checkbox" name="notify_reminder"
+                     {% if cfg.get('notify_reminder','1')=='1' %}checked{% endif %}>
+            </div>
+          </div>
+        </div>
+        <div class="row align-items-center mb-2">
+          <label class="col-6 small text-muted">Thời gian nhắc (phút)</label>
+          <div class="col-6">
+            <input type="number" name="remind_mins" class="form-control form-control-sm"
+                   value="{{ cfg.get('remind_mins','15') }}" min="5" max="60">
+          </div>
+        </div>
+        <div class="row align-items-center mb-2">
+          <label class="col-7 small text-muted">Thông báo email</label>
+          <div class="col-5 text-end">
+            <div class="form-check form-switch d-inline-block">
+              <input class="form-check-input" type="checkbox" name="notify_email"
+                     {% if cfg.get('notify_email','1')=='1' %}checked{% endif %}>
+            </div>
+          </div>
+        </div>
+        <div class="row align-items-center">
+          <label class="col-7 small text-muted">Thông báo trong ứng dụng</label>
+          <div class="col-5 text-end">
+            <div class="form-check form-switch d-inline-block">
+              <input class="form-check-input" type="checkbox" name="notify_app"
+                     {% if cfg.get('notify_app','1')=='1' %}checked{% endif %}>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- Bảo mật -->
+<div class="col-md-6">
+  <div class="table-card">
+    <div class="card-header">
+      <i class="bi bi-lock me-2"></i>Bảo mật & đăng nhập
+    </div>
+
+    <div class="p-3">
+
+      {% for label, key, placeholder in [
+        ('Khoá sau N lần sai','max_login_fail','5'),
+        ('Thời gian phiên (giờ)','session_hours','8')] %}
+
+      <div class="row align-items-center mb-2">
+        <label class="col-7 small text-muted">{{ label }}</label>
+
+        <div class="col-5">
+          <input type="number"
+                 name="{{ key }}"
+                 class="form-control form-control-sm"
+                 value="{{ cfg.get(key, placeholder) }}"
+                 min="1">
+        </div>
+      </div>
+
+      {% endfor %}
+
+      <div class="row align-items-center">
+        <label class="col-7 small text-muted">Đặt lại mật khẩu định kỳ</label>
+
+        <div class="col-5 text-end">
+          <div class="form-check form-switch d-inline-block">
+            <input class="form-check-input"
+                   type="checkbox"
+                   name="pw_reset_policy"
+                   {% if cfg.get('pw_reset_policy','1')=='1' %}checked{% endif %}>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+  <!-- Dữ liệu -->
+  <div class="col-md-6">
+    <div class="table-card">
+      <div class="card-header"><i class="bi bi-database me-2"></i>Dữ liệu & lưu trữ</div>
+      <div class="p-3">
+        <div class="row align-items-center mb-2">
+          <label class="col-7 small text-muted">Lưu nhật ký (ngày)</label>
+          <div class="col-5">
+            <input type="number" name="log_days" class="form-control form-control-sm"
+                   value="{{ cfg.get('log_days','90') }}" min="7">
+          </div>
+        </div>
+        <div class="row align-items-center mb-2">
+          <label class="col-7 small text-muted">Sao lưu tự động</label>
+          <div class="col-5 text-end">
+            <div class="form-check form-switch d-inline-block">
+              <input class="form-check-input" type="checkbox" name="auto_backup"
+                     {% if cfg.get('auto_backup','1')=='1' %}checked{% endif %}>
+            </div>
+          </div>
+        </div>
+        <div class="row align-items-center">
+          <label class="col-6 small text-muted">Tần suất sao lưu</label>
+          <div class="col-6">
+            <select name="backup_freq" class="form-select form-select-sm">
+              <option value="daily"   {% if cfg.get('backup_freq','daily')=='daily'   %}selected{% endif %}>Hàng ngày</option>
+              <option value="weekly"  {% if cfg.get('backup_freq','daily')=='weekly'  %}selected{% endif %}>Hàng tuần</option>
+              <option value="monthly" {% if cfg.get('backup_freq','daily')=='monthly' %}selected{% endif %}>Hàng tháng</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+</div><!-- row -->
+</form>
+{% endblock %}
